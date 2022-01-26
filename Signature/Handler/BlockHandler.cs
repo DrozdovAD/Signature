@@ -1,5 +1,6 @@
 namespace Signature.Handler
 {
+    using System;
     using Signature;
     using Signature.Processor;
     using Signature.Writer;
@@ -20,8 +21,14 @@ namespace Signature.Handler
         public void HandleBlockAsync(
             Models.Block block)
         {
-            var blockResult = this.processor.Process(block);
+            ThreadPool.QueueUserWorkItem(() => this.HandleBlock(block));
+        }
 
+        private void HandleBlock(
+            Models.Block block)
+        {
+            Console.WriteLine("handle");
+            var blockResult = this.processor.Process(block);
             this.writer.Write(blockResult);
         }
     }
