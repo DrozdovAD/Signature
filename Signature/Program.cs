@@ -1,6 +1,7 @@
 ﻿namespace Signature
 {
     using System;
+    using System.Threading;
     using Signature.Handler;
     using Signature.Processor;
     using Signature.Reader;
@@ -16,6 +17,8 @@
 
             try
             {
+                var workDoneEvent = new ManualResetEvent(false);
+
                 IReader reader = new FileStreamReader(
                         filePath: filePath,
                         blockSize: blockSize);
@@ -23,10 +26,15 @@
                 IWriter writer = new ConsoleWriter();
                 IHandler blocksHandler = new BlockHandler(
                     processor: processor,
-                    writer: writer);
+                    writer: writer,
+                    workDoneEvent: workDoneEvent);
 
                 reader.BlockWasRead += (block) => blocksHandler.HandleBlockAsync(block);
+                reader.EndOfRead += blocksHandler.EndOfRead;
+
                 reader.Read();
+
+                workDoneEvent.WaitOne();
             }
             catch (Exception e)
             {

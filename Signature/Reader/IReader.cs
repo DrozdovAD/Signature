@@ -6,6 +6,8 @@ namespace Signature.Reader
     {
         public event Action<Models.Block> BlockWasRead;
 
+        public event Action EndOfRead;
+
         public void Read();
     }
 }

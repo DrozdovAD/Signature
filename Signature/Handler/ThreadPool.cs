@@ -6,8 +6,9 @@ namespace Signature.Handler
 
     public static class ThreadPool
     {
-        private static readonly Queue<Action> Works = new Queue<Action>();
-        private static readonly List<Thread> Threads = new List<Thread>();
+        private static readonly Queue<Action> Tasks = new Queue<Action>();
+        private static readonly List<Thread> Workers = new List<Thread>();
+        private static bool tasksIsOver = false;
 
         static ThreadPool()
         {
@@ -20,36 +21,50 @@ namespace Signature.Handler
                     IsBackground = true,
                 };
                 thread.Start();
-                Threads.Add(thread);
+                Workers.Add(thread);
+            }
+        }
+
+        public static void WaitForThreads()
+        {
+            tasksIsOver = true;
+
+            foreach (var worker in Workers)
+            {
+                worker.Join();
             }
         }
 
         public static void QueueUserWorkItem(
             Action action)
         {
-            lock (Works)
+            lock (Tasks)
             {
                 Console.WriteLine("enque");
-                Works.Enqueue(action);
-                Monitor.Pulse(Works);
+                Tasks.Enqueue(action);
+                Monitor.Pulse(Tasks);
             }
         }
 
-        #pragma warning disable
         private static void DoUserWorkItem()
         {
             while (true)
             {
                 Action work;
 
-                lock (Works)
+                lock (Tasks)
                 {
-                    while (Works.Count == 0)
+                    while (Tasks.Count == 0)
                     {
-                        Monitor.Wait(Works);
+                        if (tasksIsOver)
+                        {
+                            return;
+                        }
+
+                        Monitor.Wait(Tasks);
                     }
 
-                    work = Works.Dequeue();
+                    work = Tasks.Dequeue();
                 }
 
                 Console.WriteLine("work");

@@ -1,6 +1,7 @@
 namespace Signature.Handler
 {
     using System;
+    using System.Threading;
     using Signature;
     using Signature.Processor;
     using Signature.Writer;
@@ -9,19 +10,28 @@ namespace Signature.Handler
     {
         private readonly IProcessor processor;
         private readonly IWriter writer;
+        private readonly ManualResetEvent workDoneEvent;
 
         public BlockHandler(
             IProcessor processor,
-            IWriter writer)
+            IWriter writer,
+            ManualResetEvent workDoneEvent)
         {
             this.processor = processor;
             this.writer = writer;
+            this.workDoneEvent = workDoneEvent;
         }
 
         public void HandleBlockAsync(
             Models.Block block)
         {
             ThreadPool.QueueUserWorkItem(() => this.HandleBlock(block));
+        }
+
+        public void EndOfRead()
+        {
+            ThreadPool.WaitForThreads();
+            this.workDoneEvent?.Set();
         }
 
         private void HandleBlock(

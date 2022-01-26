@@ -18,6 +18,8 @@ namespace Signature.Reader
 
         public event Action<Models.Block> BlockWasRead;
 
+        public event Action EndOfRead;
+
         public void Read()
         {
             using var fileStream = new FileStream(
@@ -37,6 +39,7 @@ namespace Signature.Reader
 
                 if (size == 0)
                 {
+                    this.EndOfRead?.Invoke();
                     return;
                 }
 
