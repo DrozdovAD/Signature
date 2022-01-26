@@ -21,6 +21,7 @@ namespace Signature.Handler
             Models.Block block)
         {
             var blockResult = this.processor.Process(block);
+
             this.writer.Write(blockResult);
         }
     }
