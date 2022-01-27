@@ -24,31 +24,27 @@ namespace Signature.Writer
             }
             else
             {
-                this.CurrentBlockResultFound(blockResult.result, true);
+                lock (Locker)
+                {
+                    this.CurrentBlockResultFound(blockResult.result, true);
+                    this.CheckNextBlockResultInCache();
+                }
             }
-
-            this.CheckNextBlockResultInCache();
         }
 
         private void CurrentBlockResultFound(
             string nextResult,
             bool flag)
         {
-            lock (Locker)
-            {
-                Interlocked.Increment(ref currentNumber);
-                Console.WriteLine("Number: {0}, Hash: {1}, {2}, {3}", currentNumber, nextResult, Thread.CurrentThread.Name, flag);
-            }
+            Interlocked.Increment(ref currentNumber);
+            Console.WriteLine("Number: {0}, Hash: {1}, {2}, {3}", currentNumber, nextResult, Thread.CurrentThread.Name, flag);
         }
 
         private void CheckNextBlockResultInCache()
         {
-            lock (Locker)
+            while (cache.TryRemove(currentNumber, out var nextBlockResult))
             {
-                while (cache.TryRemove(currentNumber, out var nextBlockResult))
-                {
-                    this.CurrentBlockResultFound(nextBlockResult, false);
-                }
+                this.CurrentBlockResultFound(nextBlockResult, false);
             }
         }
     }
