@@ -2,11 +2,7 @@
 {
     using System;
     using System.Diagnostics;
-    using System.Threading;
-    using Signature.Handler;
-    using Signature.Processor;
-    using Signature.Reader;
-    using Signature.Writer;
+    using Signature.Infrastructure;
 
     internal static class Program
     {
@@ -21,24 +17,10 @@
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
 
-                var workDoneEvent = new ManualResetEvent(false);
-
-                IReader reader = new FileStreamReader(
-                        filePath: filePath,
-                        blockSize: blockSize);
-                IProcessor processor = new Sha256Processor();
-                IWriter writer = new OrderedConsoleWriter();
-                IHandler blocksHandler = new BlockHandler(
-                    processor: processor,
-                    writer: writer,
-                    workDoneEvent: workDoneEvent);
-
-                reader.BlockWasRead += (block) => blocksHandler.HandleBlockAsync(block);
-                reader.EndOfRead += blocksHandler.EndOfRead;
-
-                reader.Read();
-
-                workDoneEvent.WaitOne();
+                var signature = FileSignatureFactory.Create();
+                signature.Proccess(
+                    filePath: filePath,
+                    blockSize: blockSize);
 
                 stopwatch.Stop();
                 Console.WriteLine("Elapsed Time is {0} ms", stopwatch.ElapsedMilliseconds);

@@ -2,7 +2,7 @@ namespace Signature.Handler
 {
     using System;
     using System.Threading;
-    using Signature;
+    using Signature.Infrastructure;
     using Signature.Processor;
     using Signature.Writer;
 

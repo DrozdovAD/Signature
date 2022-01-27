@@ -1,6 +1,7 @@
 namespace Signature.Writer
 {
     using System;
+    using Signature.Infrastructure;
 
     public class ConsoleWriter : IWriter
     {

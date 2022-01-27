@@ -1,4 +1,4 @@
-namespace Signature
+namespace Signature.Infrastructure
 {
     using System;
 

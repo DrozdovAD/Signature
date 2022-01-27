@@ -3,6 +3,7 @@ namespace Signature.Writer
     using System;
     using System.Collections.Concurrent;
     using System.Threading;
+    using Signature.Infrastructure;
 
     public class OrderedConsoleWriter : IWriter
     {

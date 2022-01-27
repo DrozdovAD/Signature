@@ -1,6 +1,7 @@
 namespace Signature.Reader
 {
     using System;
+    using Signature.Infrastructure;
 
     public interface IReader
     {
@@ -8,6 +9,8 @@ namespace Signature.Reader
 
         public event Action EndOfRead;
 
-        public void Read();
+        public void Read(
+            string filePath,
+            int blockSize);
     }
 }

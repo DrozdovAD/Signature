@@ -1,4 +1,4 @@
-namespace Signature
+namespace Signature.Infrastructure
 {
     public static class Models
     {

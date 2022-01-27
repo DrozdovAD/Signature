@@ -2,28 +2,20 @@ namespace Signature.Reader
 {
     using System;
     using System.IO;
+    using Signature.Infrastructure;
 
     public class FileStreamReader : IReader
     {
-        private readonly string filePath;
-        private readonly int blockSize;
-
-        public FileStreamReader(
-            string filePath,
-            int blockSize)
-        {
-            this.filePath = filePath;
-            this.blockSize = blockSize;
-        }
-
         public event Action<Models.Block> BlockWasRead;
 
         public event Action EndOfRead;
 
-        public void Read()
+        public void Read(
+            string filePath,
+            int blockSize)
         {
             using var fileStream = new FileStream(
-                path: this.filePath,
+                path: filePath,
                 mode: FileMode.Open,
                 access: FileAccess.Read);
 
@@ -31,11 +23,11 @@ namespace Signature.Reader
 
             while (true)
             {
-                var buffer = new byte[this.blockSize];
+                var buffer = new byte[blockSize];
                 var size = fileStream.Read(
                     buffer: buffer,
                     offset: 0,
-                    count: this.blockSize);
+                    count: blockSize);
 
                 if (size == 0)
                 {
