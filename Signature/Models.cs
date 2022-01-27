@@ -8,6 +8,6 @@ namespace Signature
 
         public record BlockResult(
             int number,
-            string hash);
+            string result);
     }
 }

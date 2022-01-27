@@ -6,7 +6,7 @@ namespace Signature.Writer
     {
         public void Write(Models.BlockResult blockResult)
         {
-            Console.WriteLine("Number: {0}, Hash: {1}", blockResult.number, blockResult.hash);
+            Console.WriteLine("Number: {0}, Hash: {1}", blockResult.number, blockResult.result);
         }
     }
 }

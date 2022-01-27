@@ -15,7 +15,7 @@ namespace Signature.Processor
 
             return new Models.BlockResult(
                 number: block.number,
-                hash: readableHash);
+                result: readableHash);
         }
     }
 }

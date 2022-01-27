@@ -1,6 +1,7 @@
 ﻿namespace Signature
 {
     using System;
+    using System.Diagnostics;
     using System.Threading;
     using Signature.Handler;
     using Signature.Processor;
@@ -17,13 +18,16 @@
 
             try
             {
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+
                 var workDoneEvent = new ManualResetEvent(false);
 
                 IReader reader = new FileStreamReader(
                         filePath: filePath,
                         blockSize: blockSize);
                 IProcessor processor = new Sha256Processor();
-                IWriter writer = new ConsoleWriter();
+                IWriter writer = new OrderedConsoleWriter();
                 IHandler blocksHandler = new BlockHandler(
                     processor: processor,
                     writer: writer,
@@ -35,6 +39,9 @@
                 reader.Read();
 
                 workDoneEvent.WaitOne();
+
+                stopwatch.Stop();
+                Console.WriteLine("Elapsed Time is {0} ms", stopwatch.ElapsedMilliseconds);
             }
             catch (Exception e)
             {
