@@ -2,6 +2,7 @@ namespace Signature.Processor
 {
     using System;
     using System.Security.Cryptography;
+    using Signature.Infrastructure;
 
     public class Sha256Processor : IProcessor
     {
