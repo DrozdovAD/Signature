@@ -29,6 +29,11 @@ namespace Signature.Handler
         {
             tasksIsOver = true;
 
+            lock (Tasks)
+            {
+                Monitor.PulseAll(Tasks);
+            }
+
             foreach (var worker in Workers)
             {
                 worker.Join();
