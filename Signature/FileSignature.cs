@@ -1,8 +1,5 @@
 namespace Signature
 {
-    using System;
-    using System.Threading;
-    using Signature.Handler;
     using Signature.Reader;
 
     public class FileSignature

@@ -9,22 +9,29 @@ namespace Signature.Handler
     {
         private readonly IProcessor processor;
         private readonly IWriter writer;
-
-        private readonly CountdownEvent blocksCounter = new CountdownEvent(initialCount: 1);
+        private readonly CustomSemaphoreSlim readSpeedLimiter;
+        private readonly CountdownEvent blocksCounter;
 
         public BlockHandler(
             IProcessor processor,
-            IWriter writer)
+            IWriter writer,
+            CustomSemaphoreSlim readSpeedLimiter)
         {
             this.processor = processor;
             this.writer = writer;
+            this.readSpeedLimiter = readSpeedLimiter;
+            this.blocksCounter = new CountdownEvent(initialCount: 1);
         }
 
         public void HandleBlockAsync(
             Models.Block block)
         {
             this.blocksCounter.AddCount();
-            CustomThreadPool.QueueUserWorkItem(() => this.HandleBlock(block));
+            CustomThreadPool.QueueUserWorkItem(() =>
+            {
+                this.readSpeedLimiter.Release();
+                this.HandleBlock(block);
+            });
         }
 
         public void WaitWorkToBeDone()
@@ -51,7 +58,7 @@ namespace Signature.Handler
 
         private void Reset()
         {
-            ((OrderedConsoleWriter)this.writer).Reset();
+            this.writer.Reset();
             this.blocksCounter.Reset();
         }
     }

@@ -6,6 +6,14 @@ namespace Signature.Reader
 
     public class FileStreamReader : IReader
     {
+        private readonly CustomSemaphoreSlim readSpeedLimiter;
+
+        public FileStreamReader(
+            CustomSemaphoreSlim readSpeedLimiter)
+        {
+            this.readSpeedLimiter = readSpeedLimiter;
+        }
+
         public event Action<Models.Block> BlockWasRead;
 
         public event Action EndOfRead;
@@ -23,6 +31,7 @@ namespace Signature.Reader
 
             while (true)
             {
+                this.readSpeedLimiter.WaitOne();
                 var buffer = new byte[blockSize];
                 var size = fileStream.Read(
                     buffer: buffer,
@@ -31,6 +40,7 @@ namespace Signature.Reader
 
                 if (size == 0)
                 {
+                    this.readSpeedLimiter.Release();
                     this.EndOfRead?.Invoke();
                     return;
                 }

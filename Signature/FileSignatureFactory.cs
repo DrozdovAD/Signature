@@ -1,7 +1,7 @@
 namespace Signature
 {
-    using System.Threading;
     using Signature.Handler;
+    using Signature.Infrastructure;
     using Signature.Processor;
     using Signature.Reader;
     using Signature.Writer;
@@ -10,12 +10,16 @@ namespace Signature
     {
         public static FileSignature Create()
         {
-            IReader reader = new FileStreamReader();
+            var semaphore = new CustomSemaphoreSlim(
+                maxValue: 8);
+            IReader reader = new FileStreamReader(
+                readSpeedLimiter: semaphore);
             IProcessor processor = new Sha256Processor();
             IWriter writer = new OrderedConsoleWriter();
             IHandler blocksHandler = new BlockHandler(
                 processor: processor,
-                writer: writer);
+                writer: writer,
+                readSpeedLimiter: semaphore);
 
             reader.BlockWasRead += (block) => blocksHandler.HandleBlockAsync(block);
             reader.EndOfRead += blocksHandler.WaitWorkToBeDone;

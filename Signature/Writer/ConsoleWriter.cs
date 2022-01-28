@@ -9,5 +9,10 @@ namespace Signature.Writer
         {
             Console.WriteLine("Number: {0}, Hash: {1}", blockResult.number, blockResult.result);
         }
+
+        public void Reset()
+        {
+            Console.WriteLine();
+        }
     }
 }
