@@ -8,10 +8,12 @@ namespace Signature
 
     public static class FileSignatureFactory
     {
+        private const int ReadSpeedLimiterMaxValue = 800;
+
         public static FileSignature Create()
         {
             var semaphore = new CustomSemaphoreSlim(
-                maxValue: 8);
+                maxValue: ReadSpeedLimiterMaxValue);
             IReader reader = new FileStreamReader(
                 readSpeedLimiter: semaphore);
             IProcessor processor = new Sha256Processor();

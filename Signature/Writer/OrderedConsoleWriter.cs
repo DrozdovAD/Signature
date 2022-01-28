@@ -7,7 +7,6 @@ namespace Signature.Writer
 
     public class OrderedConsoleWriter : IWriter
     {
-        private readonly object locker = new object();
         private ConcurrentDictionary<int, string> cache;
         private volatile int currentNumber;
 
@@ -30,34 +29,30 @@ namespace Signature.Writer
                 throw new AggregateException("Duplicate block found");
             }
 
-            lock (this.locker)
+            if (blockResult.number > this.currentNumber)
             {
-                if (blockResult.number > this.currentNumber)
-                {
-                    Console.WriteLine("Number: {0}, CurNum: {1}, {2}, Count: {3} - cached", blockResult.number, this.currentNumber, Thread.CurrentThread.Name, this.cache.Count);
-                    this.cache.TryAdd(blockResult.number, blockResult.result);
-                }
-                else
-                {
-                    this.CurrentBlockResultFound(blockResult.result, true);
-                    this.CheckNextBlockResultInCache();
-                }
+                this.cache.TryAdd(blockResult.number, blockResult.result);
             }
+            else
+            {
+                this.CurrentBlockResultFound(blockResult.result);
+            }
+
+            this.CheckNextBlockResultInCache();
         }
 
         private void CurrentBlockResultFound(
-            string nextResult,
-            bool flag)
+            string nextResult)
         {
             Interlocked.Increment(ref this.currentNumber);
-            Console.WriteLine("Number: {0}, Hash: {1}, {2}, {3}, {4}", this.currentNumber, nextResult, Thread.CurrentThread.Name, this.cache.Count, flag);
+            Console.WriteLine("Number: {0}, Hash: {1}", this.currentNumber, nextResult);
         }
 
         private void CheckNextBlockResultInCache()
         {
             while (this.cache.TryRemove(this.currentNumber, out var nextBlockResult))
             {
-                this.CurrentBlockResultFound(nextBlockResult, false);
+                this.CurrentBlockResultFound(nextBlockResult);
             }
         }
     }
