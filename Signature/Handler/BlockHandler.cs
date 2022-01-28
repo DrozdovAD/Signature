@@ -1,6 +1,5 @@
 namespace Signature.Handler
 {
-    using System;
     using System.Threading;
     using Signature.Infrastructure;
     using Signature.Processor;
@@ -10,36 +9,50 @@ namespace Signature.Handler
     {
         private readonly IProcessor processor;
         private readonly IWriter writer;
-        private readonly ManualResetEvent workDoneEvent;
+
+        private readonly CountdownEvent blocksCounter = new CountdownEvent(initialCount: 1);
 
         public BlockHandler(
             IProcessor processor,
-            IWriter writer,
-            ManualResetEvent workDoneEvent)
+            IWriter writer)
         {
             this.processor = processor;
             this.writer = writer;
-            this.workDoneEvent = workDoneEvent;
         }
 
         public void HandleBlockAsync(
             Models.Block block)
         {
-            ThreadPool.QueueUserWorkItem(() => this.HandleBlock(block));
+            this.blocksCounter.AddCount();
+            CustomThreadPool.QueueUserWorkItem(() => this.HandleBlock(block));
         }
 
-        public void EndOfRead()
+        public void WaitWorkToBeDone()
         {
-            ThreadPool.WaitForThreads();
-            this.workDoneEvent?.Set();
+            this.blocksCounter.Signal();
+            this.blocksCounter.Wait();
+
+            this.Reset();
         }
 
         private void HandleBlock(
             Models.Block block)
         {
-            Console.WriteLine("handle");
-            var blockResult = this.processor.Process(block);
-            this.writer.Write(blockResult);
+            try
+            {
+                var blockResult = this.processor.Process(block);
+                this.writer.Write(blockResult);
+            }
+            finally
+            {
+                this.blocksCounter.Signal();
+            }
+        }
+
+        private void Reset()
+        {
+            ((OrderedConsoleWriter)this.writer).Reset();
+            this.blocksCounter.Reset();
         }
     }
 }

@@ -6,6 +6,6 @@ namespace Signature.Handler
     {
         public void HandleBlockAsync(Models.Block block);
 
-        public void EndOfRead();
+        public void WaitWorkToBeDone();
     }
 }

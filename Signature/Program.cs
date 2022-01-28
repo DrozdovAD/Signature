@@ -18,7 +18,7 @@
                 stopwatch.Start();
 
                 var signature = FileSignatureFactory.Create();
-                signature.Proccess(
+                signature.Process(
                     filePath: filePath,
                     blockSize: blockSize);
 

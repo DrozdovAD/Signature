@@ -7,25 +7,37 @@ namespace Signature.Writer
 
     public class OrderedConsoleWriter : IWriter
     {
-        private static readonly object Locker = new object();
-        private static ConcurrentDictionary<int, string> cache = new ConcurrentDictionary<int, string>();
-        private static volatile int currentNumber;
+        private readonly object locker = new object();
+        private ConcurrentDictionary<int, string> cache;
+        private volatile int currentNumber;
+
+        public OrderedConsoleWriter()
+        {
+            this.Reset();
+        }
+
+        public void Reset()
+        {
+            this.cache = new ConcurrentDictionary<int, string>();
+            this.currentNumber = 0;
+        }
 
         public void Write(
             Models.BlockResult blockResult)
         {
-            if (blockResult.number < currentNumber)
+            if (blockResult.number < this.currentNumber)
             {
                 throw new AggregateException("Duplicate block found");
             }
 
-            if (blockResult.number > currentNumber)
+            lock (this.locker)
             {
-                cache.TryAdd(blockResult.number, blockResult.result);
-            }
-            else
-            {
-                lock (Locker)
+                if (blockResult.number > this.currentNumber)
+                {
+                    Console.WriteLine("Number: {0}, CurNum: {1}, {2}, Count: {3} - cached", blockResult.number, this.currentNumber, Thread.CurrentThread.Name, this.cache.Count);
+                    this.cache.TryAdd(blockResult.number, blockResult.result);
+                }
+                else
                 {
                     this.CurrentBlockResultFound(blockResult.result, true);
                     this.CheckNextBlockResultInCache();
@@ -37,13 +49,13 @@ namespace Signature.Writer
             string nextResult,
             bool flag)
         {
-            Interlocked.Increment(ref currentNumber);
-            Console.WriteLine("Number: {0}, Hash: {1}, {2}, {3}", currentNumber, nextResult, Thread.CurrentThread.Name, flag);
+            Interlocked.Increment(ref this.currentNumber);
+            Console.WriteLine("Number: {0}, Hash: {1}, {2}, {3}, {4}", this.currentNumber, nextResult, Thread.CurrentThread.Name, this.cache.Count, flag);
         }
 
         private void CheckNextBlockResultInCache()
         {
-            while (cache.TryRemove(currentNumber, out var nextBlockResult))
+            while (this.cache.TryRemove(this.currentNumber, out var nextBlockResult))
             {
                 this.CurrentBlockResultFound(nextBlockResult, false);
             }

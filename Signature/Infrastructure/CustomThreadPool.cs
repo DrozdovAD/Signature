@@ -1,42 +1,27 @@
-namespace Signature.Handler
+namespace Signature.Infrastructure
 {
     using System;
     using System.Collections.Generic;
     using System.Threading;
 
-    public static class ThreadPool
+    public static class CustomThreadPool
     {
         private static readonly Queue<Action> Tasks = new Queue<Action>();
         private static readonly List<Thread> Workers = new List<Thread>();
-        private static bool tasksIsOver = false;
+        private static bool cancelWork = false;
 
-        static ThreadPool()
+        static CustomThreadPool()
         {
             var processorCount = Environment.ProcessorCount;
             for (var i = 0; i < processorCount; ++i)
             {
-                var thread = new Thread(DoUserWorkItem)
+                var worker = new Thread(DoUserWorkItem)
                 {
                     Name = string.Concat("Worker ", i),
                     IsBackground = true,
                 };
-                thread.Start();
-                Workers.Add(thread);
-            }
-        }
-
-        public static void WaitForThreads()
-        {
-            tasksIsOver = true;
-
-            lock (Tasks)
-            {
-                Monitor.PulseAll(Tasks);
-            }
-
-            foreach (var worker in Workers)
-            {
-                worker.Join();
+                worker.Start();
+                Workers.Add(worker);
             }
         }
 
@@ -45,7 +30,6 @@ namespace Signature.Handler
         {
             lock (Tasks)
             {
-                Console.WriteLine("enque");
                 Tasks.Enqueue(action);
                 Monitor.Pulse(Tasks);
             }
@@ -61,7 +45,7 @@ namespace Signature.Handler
                 {
                     while (Tasks.Count == 0)
                     {
-                        if (tasksIsOver)
+                        if (cancelWork)
                         {
                             return;
                         }
@@ -72,7 +56,6 @@ namespace Signature.Handler
                     work = Tasks.Dequeue();
                 }
 
-                Console.WriteLine("work");
                 work();
             }
         }

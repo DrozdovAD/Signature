@@ -10,20 +10,18 @@ namespace Signature
     {
         public static FileSignature Create()
         {
-            var workDoneEvent = new ManualResetEvent(false);
-
             IReader reader = new FileStreamReader();
             IProcessor processor = new Sha256Processor();
             IWriter writer = new OrderedConsoleWriter();
             IHandler blocksHandler = new BlockHandler(
                 processor: processor,
-                writer: writer,
-                workDoneEvent: workDoneEvent);
+                writer: writer);
+
+            reader.BlockWasRead += (block) => blocksHandler.HandleBlockAsync(block);
+            reader.EndOfRead += blocksHandler.WaitWorkToBeDone;
 
             return new FileSignature(
-                reader: reader,
-                blocksHandler: blocksHandler,
-                workDoneEvent: workDoneEvent);
+                reader: reader);
         }
     }
 }
