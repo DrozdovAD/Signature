@@ -31,7 +31,7 @@ namespace Signature.Reader
 
             while (true)
             {
-                this.readSpeedLimiter.WaitOne();
+                this.readSpeedLimiter?.Wait();
                 var buffer = new byte[blockSize];
                 var size = fileStream.Read(
                     buffer: buffer,
@@ -40,7 +40,7 @@ namespace Signature.Reader
 
                 if (size == 0)
                 {
-                    this.readSpeedLimiter.Release();
+                    this.readSpeedLimiter?.Reset();
                     this.EndOfRead?.Invoke();
                     return;
                 }

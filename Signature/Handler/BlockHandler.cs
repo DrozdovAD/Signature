@@ -20,18 +20,15 @@ namespace Signature.Handler
             this.processor = processor;
             this.writer = writer;
             this.readSpeedLimiter = readSpeedLimiter;
-            this.blocksCounter = new CountdownEvent(initialCount: 1);
+            this.blocksCounter = new CountdownEvent(
+                initialCount: 1);
         }
 
         public void HandleBlockAsync(
             Models.Block block)
         {
             this.blocksCounter.AddCount();
-            CustomThreadPool.QueueUserWorkItem(() =>
-            {
-                this.readSpeedLimiter.Release();
-                this.HandleBlock(block);
-            });
+            CustomThreadPool.QueueUserWorkItem(() => this.HandleBlock(block));
         }
 
         public void WaitWorkToBeDone()
@@ -52,8 +49,14 @@ namespace Signature.Handler
             }
             finally
             {
-                this.blocksCounter.Signal();
+                this.BlockHandled();
             }
+        }
+
+        private void BlockHandled()
+        {
+            this.readSpeedLimiter.Release();
+            this.blocksCounter.Signal();
         }
 
         private void Reset()
