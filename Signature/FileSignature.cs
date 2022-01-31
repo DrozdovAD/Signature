@@ -19,13 +19,13 @@ namespace Signature
         public FileSignature(
             IReader reader,
             IProcessor processor,
-            IWriter writer,
-            IHandler blocksHandler)
+            IHandler blocksHandler,
+            IWriter writer)
         {
             this.reader = reader;
             this.processor = processor;
-            this.writer = writer;
             this.blocksHandler = blocksHandler;
+            this.writer = writer;
         }
 
         public void Process(

@@ -4,12 +4,10 @@ namespace Signature.Handler
     using System.Threading;
     using Signature.Infrastructure;
     using Signature.Processor;
-    using Signature.Writer;
 
     public class BlockHandler : IHandler, IDisposable
     {
         private readonly IProcessor processor;
-        private readonly IWriter writer;
         private readonly CustomSemaphoreSlim readSpeedLimiter;
         private readonly CountdownEvent blocksCounter;
 
@@ -17,11 +15,9 @@ namespace Signature.Handler
 
         public BlockHandler(
             IProcessor processor,
-            IWriter writer,
             CustomSemaphoreSlim readSpeedLimiter)
         {
             this.processor = processor;
-            this.writer = writer;
             this.readSpeedLimiter = readSpeedLimiter;
             this.blocksCounter = new CountdownEvent(
                 initialCount: 1);
@@ -31,6 +27,10 @@ namespace Signature.Handler
         {
             this.Dispose(false);
         }
+
+        public event Action<Models.BlockResult> BlockWasProcessed;
+
+        public event Action EndOfWork;
 
         public void HandleBlockAsync(
             Models.Block block)
@@ -75,7 +75,7 @@ namespace Signature.Handler
             try
             {
                 var blockResult = this.processor.Process(block);
-                this.writer.Write(blockResult);
+                this.BlockWasProcessed?.Invoke(blockResult);
             }
             finally
             {
@@ -91,7 +91,7 @@ namespace Signature.Handler
 
         private void Reset()
         {
-            this.writer.Reset();
+            this.EndOfWork?.Invoke();
             this.blocksCounter.Reset();
         }
     }

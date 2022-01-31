@@ -17,20 +17,21 @@ namespace Signature
             IReader reader = new FileStreamReader(
                 readSpeedLimiter: semaphore);
             IProcessor processor = new Sha256Processor();
-            IWriter writer = new BufferedManualEventConsoleWriter();
             IHandler blocksHandler = new BlockHandler(
                 processor: processor,
-                writer: writer,
                 readSpeedLimiter: semaphore);
+            IWriter writer = new BufferedManualEventConsoleWriter();
 
             reader.BlockWasRead += (block) => blocksHandler.HandleBlockAsync(block);
             reader.EndOfRead += blocksHandler.WaitWorkToBeDone;
+            blocksHandler.BlockWasProcessed += writer.Write;
+            blocksHandler.EndOfWork += writer.Reset;
 
             return new FileSignature(
                 reader: reader,
                 processor: processor,
-                writer: writer,
-                blocksHandler: blocksHandler);
+                blocksHandler: blocksHandler,
+                writer: writer);
         }
     }
 }
