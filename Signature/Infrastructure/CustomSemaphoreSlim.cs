@@ -5,9 +5,9 @@ namespace Signature.Infrastructure
 
     public class CustomSemaphoreSlim
     {
-        private readonly int maxValue;
+        private readonly long maxValue;
         private readonly object locker;
-        private volatile int currentValue;
+        private long currentValue;
 
         public CustomSemaphoreSlim(
             int maxValue)
@@ -22,11 +22,11 @@ namespace Signature.Infrastructure
             this.locker = new object();
         }
 
-        public void WaitOne()
+        public void Wait()
         {
             lock (this.locker)
             {
-                while (this.currentValue == 0)
+                while (Interlocked.Read(ref this.currentValue) == 0)
                 {
                     Monitor.Wait(this.locker);
                 }
@@ -39,11 +39,19 @@ namespace Signature.Infrastructure
         {
             lock (this.locker)
             {
-                if (this.currentValue < this.maxValue)
+                if (Interlocked.Read(ref this.currentValue) < this.maxValue)
                 {
                     Interlocked.Increment(ref this.currentValue);
                     Monitor.Pulse(this.locker);
                 }
+            }
+        }
+
+        public void Reset()
+        {
+            lock (this.locker)
+            {
+                this.currentValue = this.maxValue;
             }
         }
     }
