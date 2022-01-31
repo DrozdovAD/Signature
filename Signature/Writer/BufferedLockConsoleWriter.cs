@@ -9,7 +9,6 @@ namespace Signature.Writer
     public class BufferedLockConsoleWriter : IWriter
     {
         private ConcurrentDictionary<int, string> cache;
-        private ManualResetEvent printCurrentValuesEvent;
         private volatile int currentNumber;
         private readonly object locker = new object();
 
@@ -21,7 +20,6 @@ namespace Signature.Writer
         public void Reset()
         {
             this.cache = new ConcurrentDictionary<int, string>();
-            this.printCurrentValuesEvent = new ManualResetEvent(true);
             this.currentNumber = 0;
         }
 
@@ -52,16 +50,6 @@ namespace Signature.Writer
         {
             #pragma warning disable
             Console.WriteLine("Number: {0}, Hash: {1}", this.currentNumber, nextResult);
-            // Console.WriteLine(
-            //     "Number: {0}, Hash: {1}, Worker: {2}, count: {3}, first: {4}",
-            //     this.currentNumber,
-            //     nextResult,
-            //     Thread.CurrentThread.Name,
-            //     this.cache.Count,
-            //     this.cache.Count != 0
-            //         ? this.cache.First()
-            //             .Key
-            //         : null);
             Interlocked.Increment(ref this.currentNumber);
         }
 

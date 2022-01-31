@@ -27,7 +27,10 @@ namespace Signature
             reader.EndOfRead += blocksHandler.WaitWorkToBeDone;
 
             return new FileSignature(
-                reader: reader);
+                reader: reader,
+                processor: processor,
+                writer: writer,
+                blocksHandler: blocksHandler);
         }
     }
 }

@@ -1,16 +1,19 @@
 namespace Signature.Handler
 {
+    using System;
     using System.Threading;
     using Signature.Infrastructure;
     using Signature.Processor;
     using Signature.Writer;
 
-    public class BlockHandler : IHandler
+    public class BlockHandler : IHandler, IDisposable
     {
         private readonly IProcessor processor;
         private readonly IWriter writer;
         private readonly CustomSemaphoreSlim readSpeedLimiter;
         private readonly CountdownEvent blocksCounter;
+
+        private bool disposed;
 
         public BlockHandler(
             IProcessor processor,
@@ -22,6 +25,11 @@ namespace Signature.Handler
             this.readSpeedLimiter = readSpeedLimiter;
             this.blocksCounter = new CountdownEvent(
                 initialCount: 1);
+        }
+
+        ~BlockHandler()
+        {
+            this.Dispose(false);
         }
 
         public void HandleBlockAsync(
@@ -37,6 +45,28 @@ namespace Signature.Handler
             this.blocksCounter.Wait();
 
             this.Reset();
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(
+            bool disposing)
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                this.blocksCounter?.Dispose();
+            }
+
+            this.disposed = true;
         }
 
         private void HandleBlock(
