@@ -1,6 +1,7 @@
 namespace Signature
 {
     using System;
+    using System.Threading;
     using Signature.Handler;
     using Signature.Processor;
     using Signature.Reader;
@@ -29,11 +30,13 @@ namespace Signature
 
         public void Process(
             string filePath,
-            int blockSize)
+            int blockSize,
+            CancellationToken cancellationToken = default)
         {
             this.reader.Read(
                 filePath: filePath,
-                blockSize: blockSize);
+                blockSize: blockSize,
+                cancellationToken: cancellationToken);
         }
 
         public void Dispose()

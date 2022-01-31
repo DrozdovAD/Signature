@@ -2,6 +2,7 @@ namespace Signature.Reader
 {
     using System;
     using System.IO;
+    using System.Threading;
     using Signature.Infrastructure;
 
     public class FileStreamReader : IReader
@@ -20,7 +21,8 @@ namespace Signature.Reader
 
         public void Read(
             string filePath,
-            int blockSize)
+            int blockSize,
+            CancellationToken cancellationToken = default)
         {
             using var fileStream = new FileStream(
                 path: filePath,
@@ -37,6 +39,13 @@ namespace Signature.Reader
                     buffer: buffer,
                     offset: 0,
                     count: blockSize);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Console.WriteLine("Cancellation has been requested, on processing block number {0}...", blockNumber);
+                    this.EndOfRead?.Invoke();
+                    return;
+                }
 
                 if (size == 0)
                 {

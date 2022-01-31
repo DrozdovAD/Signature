@@ -1,6 +1,7 @@
 namespace Signature.Reader
 {
     using System;
+    using System.Threading;
     using Signature.Infrastructure;
 
     public interface IReader
@@ -11,6 +12,7 @@ namespace Signature.Reader
 
         public void Read(
             string filePath,
-            int blockSize);
+            int blockSize,
+            CancellationToken cancellationToken = default);
     }
 }
