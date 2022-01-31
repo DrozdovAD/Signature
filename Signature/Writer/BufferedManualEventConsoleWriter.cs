@@ -5,12 +5,13 @@ namespace Signature.Writer
     using System.Threading;
     using Signature.Infrastructure;
 
-    public class OrderedConsoleWriter : IWriter
+    public class BufferedManualEventConsoleWriter : IWriter
     {
         private ConcurrentDictionary<int, string> cache;
+        private ManualResetEvent printCurrentValuesEvent;
         private volatile int currentNumber;
 
-        public OrderedConsoleWriter()
+        public BufferedManualEventConsoleWriter()
         {
             this.Reset();
         }
@@ -18,6 +19,7 @@ namespace Signature.Writer
         public void Reset()
         {
             this.cache = new ConcurrentDictionary<int, string>();
+            this.printCurrentValuesEvent = new ManualResetEvent(true);
             this.currentNumber = 0;
         }
 
@@ -29,23 +31,29 @@ namespace Signature.Writer
                 throw new AggregateException("Duplicate block found");
             }
 
-            if (blockResult.number > this.currentNumber)
+            this.printCurrentValuesEvent.WaitOne();
+
+            if (blockResult.number == this.currentNumber)
             {
-                this.cache.TryAdd(blockResult.number, blockResult.result);
+                this.printCurrentValuesEvent.WaitOne();
+                this.printCurrentValuesEvent.Reset();
+
+                this.CurrentBlockResultFound(blockResult.result);
+                this.CheckNextBlockResultInCache();
+
+                this.printCurrentValuesEvent.Set();
             }
             else
             {
-                this.CurrentBlockResultFound(blockResult.result);
+                this.cache.TryAdd(blockResult.number, blockResult.result);
+                this.CheckNextBlockResultInCache();
             }
-
-            this.CheckNextBlockResultInCache();
         }
 
-        private void CurrentBlockResultFound(
-            string nextResult)
+        private void CurrentBlockResultFound(string nextResult)
         {
-            Interlocked.Increment(ref this.currentNumber);
             Console.WriteLine("Number: {0}, Hash: {1}", this.currentNumber, nextResult);
+            Interlocked.Increment(ref this.currentNumber);
         }
 
         private void CheckNextBlockResultInCache()

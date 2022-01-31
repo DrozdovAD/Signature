@@ -8,7 +8,7 @@ namespace Signature
 
     public static class FileSignatureFactory
     {
-        private const int ReadSpeedLimiterMaxValue = 800;
+        private const int ReadSpeedLimiterMaxValue = 8;
 
         public static FileSignature Create()
         {
@@ -17,7 +17,7 @@ namespace Signature
             IReader reader = new FileStreamReader(
                 readSpeedLimiter: semaphore);
             IProcessor processor = new Sha256Processor();
-            IWriter writer = new OrderedConsoleWriter();
+            IWriter writer = new BufferedManualEventConsoleWriter();
             IHandler blocksHandler = new BlockHandler(
                 processor: processor,
                 writer: writer,
